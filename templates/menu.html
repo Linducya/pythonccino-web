@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-resource.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-cookies.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-aria.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-messages.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angular_material/0.11.2/angular-material.min.js"></script>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/0.11.2/angular-material.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <title>Pythonccino - Menu</title>
+  </head>
+  <body>
+    <h1>Menu</h1>
+
+    <h2>Book Menu</h2>
+    <ul>
+      {% for book in book_menu %}
+        <li>{{ book.title }} by {{ book.author }}</li>
+        <li>{{ book['name'] }} - {{ book['price'] }}</li>
+      {% endfor %}
+    </ul>
+
+    <h2>Drinks Menu</h2>
+    <ul>
+      {% for drink in drinks_menu %}
+        <li>{{ drink.name }} - {{ drink.price }}</li>
+      {% endfor %}
+    </ul>
+
+    <h2>Food Menu</h2>
+    <ul>
+      {% for food in food_menu %}
+        <li>{{ food.name }} - {{ food.price }}</li>
+      {% endfor %}
+    </ul>
+
+    <a href="{{ url_for('add_food') }}">Add Food Item</a><br>
+    <a href="{{ url_for('add_book') }}">Add Book Item</a>
+    <a href="/">Back to Home</a>
+  </body>
+</html>
