@@ -1,0 +1,29 @@
+<!-- filepath: /Users/markthomson/git/python/pythonccino-web/templates/home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pythonccino - Home</title>
+</head>
+<body>
+    <h1>Welcome to Pythonccino!</h1>
+    <img src="https://www.python.org/static/community_logos/python-logo-master-v3-TM.png" alt="Python Logo">
+    <h2>Menus</h2>
+    <h2>Food Menu</h2>
+    <ul>
+        {% for item in food_menu %}
+        <li>{{ item.name }} - {{ item.description }} (£{{ item.price }})</li>
+        {% endfor %}
+    </ul>
+    <h2>Book Menu</h2>
+    <ul>
+        {% for item in book_menu %}
+        <li>{{ item.title }} ({{ item.year_published }}) - £{{ item.price }}</li>
+        {% endfor %}
+    </ul>
+    <a href="/add_food">Add Food Item</a>
+    <a href="/add_book">Add Book Item</a>
+    <a href="/">Back to Home</a>
+</body>
+</html>
