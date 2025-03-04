@@ -3,15 +3,13 @@ import json
 import os
 
 # Define base directory where JSON files are stored
-# BASE_DIR gets the absolute directory path of the current script (run.py)
+# BASE_DIR gets the absolute directory path of the current script (main.py)
 # BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Moves up one level to the parent directory
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# print(BASE_DIR)
 
 # DATA_DIR is the relative path to the data/ folder
 DATA_DIR = os.path.join(BASE_DIR, 'data')
-# print(DATA_DIR)
 
 # Construct the full path to the JSON files
 food_menu_path = os.path.join(DATA_DIR, 'food_menu.json')
