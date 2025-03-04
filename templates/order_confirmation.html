@@ -7,16 +7,18 @@
 </head>
 <body>
     <h1>Order Confirmation</h1>
-    <p>Thank you, {{ order_details.name }}! Your order for 
-        {% if order_type == 'food' %}
-            {{ order_details.quantity }} x {{ order_details.food_item }}
-        {% elif order_type == 'book' %}
-            {{ order_details.quantity }} x {{ order_details.book_title }}
-        {% endif %}
-        has been received.
-    </p>
-    <h2>Menus</h2>
-    <a href="/home">View Menus</a>
+    <p>Thank you, {{ order_details[0].name }}! Your order has been received.</p>
+    <p><b>Order Number:</b> {{ order_details[0].order_number }}</p>
+    <ul>
+        {% for item in order_details %}
+            {% if order_type == 'food' %}
+                <li>{{ item.quantity }} x {{ item.food_item }} - {{ item.description }} - £{{ item.price }}</li>
+            {% elif order_type == 'book' %}
+                <li>{{ item.quantity }} x {{ item.book_title }} - £{{ item.price }}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <p><b>Total Amount:</b> £{{ total_amount }}</p>
     <a href="/order_food">Order Food</a>
     <a href="/order_book">Order Book</a>
     <a href="/">Back to Home</a>

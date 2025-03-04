@@ -1,0 +1,67 @@
+[
+    {
+        "name": "Pizza",
+        "price": 12.99,
+        "description": "Cheese and tomato pizza"
+    },
+    {
+        "name": "Burger",
+        "price": 8.99,
+        "description": "Beef burger with lettuce"
+    },
+    {
+        "name": "Pasta",
+        "price": 10.99,
+        "description": "Spaghetti with marinara sauce"
+    },
+    {
+        "name": "Salad",
+        "price": 5.99,
+        "description": "Mixed greens with dressing"
+    },
+    {
+        "name": "Brownie",
+        "description": "Chocolate",
+        "price": 2.99
+    },
+    {
+        "name": "Fruit",
+        "description": "Orange",
+        "price": 0.99
+    },
+    {
+        "name": "Fruit",
+        "description": "Grapes",
+        "price": 0.99
+    },
+    {
+        "name": "Fruit",
+        "description": "Mango",
+        "price": 0.99
+    },
+    {
+        "name": "Cake",
+        "description": "Carrot",
+        "price": 3.99
+    },
+    {
+        "name": "Cake",
+        "description": "Victoria Sponge",
+        "price": 3.99
+    },
+    {
+        "name": "Cake",
+        "description": "Almond",
+        "price": 9.99
+    },
+    {
+        "name": "Cake",
+        "description": "Vanilla Sponge",
+        "price": 2.99
+    },
+    {
+        "name": "Fruit",
+        "description": "Strawberries",
+        "price": 1.99
+    }
+]

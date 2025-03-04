@@ -1,0 +1,42 @@
+[
+    {
+        "title": "Harry Potter and the Philosopher's Stone",
+        "year_published": 1997,
+        "price": 5.99
+    },
+    {
+        "title": "Harry Potter and the Chamber of Secrets",
+        "year_published": 1998,
+        "price": 5.99
+    },
+    {
+        "title": "Harry Potter and the Prisoner of Azkaban",
+        "year_published": 1999,
+        "price": 5.99
+    },
+    {
+        "title": "Harry Potter and the Goblet of Fire",
+        "year_published": 2000,
+        "price": 5.99
+    },
+    {
+        "title": "Harry Potter and the Order of the Phoenix",
+        "year_published": 2003,
+        "price": 5.99
+    },
+    {
+        "title": "Harry Potter and the Deathly Hallows",
+        "year_published": 2007,
+        "price": 5.99
+    },
+    {
+        "title": "Enebla: Recipes from an Ethiopian Kitchen",
+        "year_published": 2022,
+        "price": 22.36
+    },
+    {
+        "title": "New Book",
+        "year_published": "1996",
+        "price": 3.99
+    }
+]
