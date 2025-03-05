@@ -26,7 +26,6 @@ A web-based book café application built with Python, designed to showcase menu 
 ## Roadmap
 - [ ] Build HTML templates
 - [ ] Create backend routes
-- [ ] Connect MySQL database
 - [ ] Deploy to Azure Storage
 
 ## Contributing
