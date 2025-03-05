@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.utils_data import load_data, save_data
 from app.utils_email import send_email_confirmation
+from app.auth import get_current_user
 import json
 import os
 import uuid
@@ -12,11 +13,11 @@ router = APIRouter()
 # Define the templates object
 templates = Jinja2Templates(directory="templates")
 
-@router.get("/add_food", response_class=HTMLResponse)
+@router.get("/add_food", response_class=HTMLResponse, dependencies=[Depends(get_current_user)])
 async def get_add_food(request: Request):
     return templates.TemplateResponse("add_food.html", {"request": request})
 
-@router.post("/add_food", response_class=HTMLResponse)
+@router.post("/add_food", response_class=HTMLResponse, dependencies=[Depends(get_current_user)])
 async def post_add_food(request: Request, name: str = Form(...), description: str = Form(...), price: float = Form(...)):
     food_menu, book_menu = load_data()
     new_food = {"name": name, "description": description, "price": price}
