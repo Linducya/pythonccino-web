@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
 import bcrypt
+import secrets  # Import the secrets module
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,6 +17,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+# In-memory store for MFA codes (for demonstration purposes)
+mfa_codes = {}
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
@@ -23,15 +27,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 def authenticate_user(username: str, password: str):
-    # Load username and password from environment variables
     correct_username = os.getenv("STAFF_USERNAME")
     correct_password_hash = os.getenv("STAFF_PASSWORD")
-    print(f"Correct Username: {correct_username}")
-    print(f"Correct Password Hash: {correct_password_hash}")
     if username == correct_username and verify_password(password, correct_password_hash):
-        print("Authentication successful")
         return {"username": username}
-    print("Authentication failed")
     return None
 
 def create_access_token(data: dict):
@@ -40,6 +39,15 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+def generate_mfa_code(username: str):
+    code = secrets.token_hex(3)  # Generate a 6-character hex code
+    mfa_codes[username] = code
+    # Send the code to the user (e.g., via email or SMS)
+    print(f"MFA code for {username}: {code}")
+
+def verify_mfa_code(username: str, code: str):
+    return mfa_codes.get(username) == code
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -55,5 +63,4 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError as e:
         print(f"JWTError: {e}")
         raise credentials_exception
-    print(f"Current User: {username}")
     return {"username": username}
