@@ -26,7 +26,30 @@
             }
         }
 
-        window.onload = loadStaffPage;
+        window.onload = async function () {
+            const token = localStorage.getItem('token');
+            console.log("Token in staff.html:", token);  // Debug Step
+
+            if (!token) {
+                alert("No token found. Please log in again.");
+                window.location.href = "/login";
+            } else {
+                const response = await fetch('/staff', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.status === 401) {
+                    alert("Unauthorized! Please log in again.");
+                    window.location.href = "/login";
+                } else {
+                    const result = await response.text();
+                    document.body.innerHTML = result;
+                }
+            }
+        };
     </script>
 </head>
 <body>

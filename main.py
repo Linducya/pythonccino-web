@@ -1,20 +1,22 @@
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordRequestForm
-from app.auth import authenticate_user, create_access_token, get_current_user, generate_mfa_code, verify_mfa_code
+from app.auth import authenticate_user, create_access_token, get_current_user, generate_totp_secret, verify_totp_code
 from app.utils_data import load_data, save_data
 from app.routes_food import router as food_router  # Import food_router
 from app.routes_book import router as book_router  # Import book_router
 from dotenv import load_dotenv
 import os
+import urllib.parse  # Import urllib.parse for URL encoding
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI()
 
+# Setup Jinja2 Templates
 templates = Jinja2Templates(directory="templates")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -23,9 +25,13 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
-@app.get("/verify_mfa", response_class=HTMLResponse)
-async def verify_mfa_form(request: Request):
-    return templates.TemplateResponse("verify_mfa.html", {"request": request})
+@app.get("/verify_totp", response_class=HTMLResponse)
+async def verify_totp(request: Request, username: str, totp_uri: str):
+    return templates.TemplateResponse("verify_totp.html", {
+        "request": request,
+        "totp_uri": totp_uri,
+        "username": username
+    })
 
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -36,18 +42,29 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    generate_mfa_code(user["username"])
-    return {"message": "MFA code sent"}
+    totp_uri = generate_totp_secret(user["username"])
+    # encoded_totp_uri = urllib.parse.quote(totp_uri)  # URL-encode the TOTP URI
+    access_token = create_access_token(data={"sub": user["username"]})
 
-@app.post("/verify_mfa")
-async def verify_mfa(username: str = Form(...), code: str = Form(...)):
-    if verify_mfa_code(username, code):
+    return JSONResponse(
+        content={
+            "access_token": access_token,
+            "message": "TOTP URI generated",
+            "username": user["username"],
+            "totp_uri": totp_uri  # Pass the raw TOTP URI here (not encoded, frontend will encode it)
+        },
+        status_code=200
+    )
+
+@app.post("/verify_totp")
+async def verify_totp(username: str = Form(...), code: str = Form(...)):
+    if verify_totp_code(username, code):
         access_token = create_access_token(data={"sub": username})
         return {"access_token": access_token, "token_type": "bearer"}
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid MFA code",
+            detail="Invalid TOTP code",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
