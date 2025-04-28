@@ -4,59 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Dashboard</title>
-    <script>
-        async function loadStaffPage() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login';
-                return;
-            }
-            const response = await fetch('/staff', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (response.ok) {
-                const result = await response.text();
-                document.body.innerHTML = result;
-            } else {
-                alert('Failed to load staff page');
-                window.location.href = '/login';
-            }
-        }
-
-        window.onload = async function () {
-            const token = localStorage.getItem('token');
-            console.log("Token in staff.html:", token);  // Debug Step
-
-            if (!token) {
-                alert("No token found. Please log in again.");
-                window.location.href = "/login";
-            } else {
-                const response = await fetch('/staff', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + token
-                    }
-                });
-
-                if (response.status === 401) {
-                    alert("Unauthorized! Please log in again.");
-                    window.location.href = "/login";
-                } else {
-                    const result = await response.text();
-                    document.body.innerHTML = result;
-                }
-            }
-        };
-    </script>
 </head>
 <body>
     <h1>Staff Dashboard</h1>
-    <p>Welcome, {{ username }}!</p>
+    <h1>Welcome, <span id="username"></span>!</h1>
+    <p>This is the staff dashboard. You can manage users and access restricted content here.</p>
+
     <a href="/add_food">Add Food Item</a><br>
     <a href="/add_book">Add Book Item</a><br>
     <a href="/">Back to Home</a>
+    <a href="/logout" onclick="localStorage.removeItem('token');">Logout</a>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const token = localStorage.getItem('token');  // ✅ Always use localStorage
+
+        if (!token) {
+            alert("No token found. Redirecting to login.");
+            window.location.href = '/login';
+            return;
+        }
+
+        fetch('/staff', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }  // ✅ Send token in headers
+        })
+        .then(response => {
+            if (response.ok) return response.json();
+            throw new Error('Unauthorized');
+        })
+        .then(data => {
+            document.getElementById("username").innerText = data.username;  // ✅ Insert username dynamically
+        })
+        .catch(error => {
+            console.error(error);
+            alert("Session expired. Please log in again.");
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        });
+    });
+    //   headers: { 'Authorization': `Bearer ${token}` }  // ✅ Send token in headers
+  
+    //     document.addEventListener("DOMContentLoaded", function () {
+    //         const token = localStorage.getItem('token');  // ✅ Always use localStorage
+
+    //         if (!token) {
+    //             alert("No token found. Redirecting to login.");
+    //             window.location.href = '/login';
+    //             return;
+    //         }
+
+    //         fetch('/staff', {
+    //             method: 'GET',
+    //             headers: { 'Authorization': `Bearer ${token}` }
+    //         })
+    //         .then(response => {
+    //             if (response.ok) return response.json();
+    //             throw new Error('Unauthorized');
+    //         })
+    //         .then(data => {
+    //             document.getElementById("username").innerText = data.username;  // ✅ Insert username dynamically
+    //         })
+    //         .catch(error => {
+    //             console.error(error);
+    //             alert("Session expired. Please log in again.");
+    //             localStorage.removeItem('token');
+    //             window.location.href = '/login';
+    //         });
+    //     });
+    </script>
 </body>
 </html>

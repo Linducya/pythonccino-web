@@ -4,8 +4,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 def send_email_confirmation(name, email, order_details, order_type="food"):
-    sender_email = os.getenv("EMAIL_ADDRESS")
-    sender_password = os.getenv("EMAIL_PASSWORD")
+    sender_email = os.getenv("SMTP_EMAIL")
+    sender_password = os.getenv("SMTP_PASSWORD")
     receiver_email = email
 
     # Extract the order number from the first item in order_details
@@ -48,6 +48,14 @@ def send_email_confirmation(name, email, order_details, order_type="food"):
     message.attach(part2)
 
     # Send the email
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, receiver_email, message.as_string())
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
+        print("Email sent successfully!")
+    except smtplib.SMTPException as e:
+        print(f"Error sending email: {e}")
+        # If the email fails to send, print the error message    
+        raise
+    # Note: Ensure to set the environment variables EMAIL_ADDRESS and EMAIL_PASSWORD
+    # with your email credentials before running this code.

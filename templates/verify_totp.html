@@ -5,62 +5,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify TOTP</title>
     <script src="/static/qrcode.min.js"></script>
-    <script>
-        async function handleVerifyTOTP(event) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-            const data = {
-                username: formData.get('username'),
-                code: formData.get('code')
-            };
-            const response = await fetch('/verify_totp', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams(data)
-            });
-            if (response.ok) {
-                const result = await response.json();
-                localStorage.setItem('token', result.access_token);
-                window.location.href = '/staff';
-            } else {
-                alert('TOTP verification failed');
-            }
-        }
 
-        window.onload = function () {
-            console.log("Window onload function triggered!"); // First debug step
-            const totpUri = new URLSearchParams(window.location.search).get('totp_uri');
-            console.log("The const var TOTP URI:", totpUri); // Debugging Step
-            if (totpUri) {
-                console.log("Debug Step - TOTP URI:", totpUri); // Debugging Step
-                try {
-                    const decodedUri = decodeURIComponent(totpUri);
-                    console.log("Decoded URI:", decodedUri); // Check if the URI is correct
-                    new QRCode(document.getElementById("qrcode"), decodedUri);
-                    // new QRCode(document.getElementById("qrcode"), decodeURIComponent(totpUri));
-                } catch (e) {
-                    console.error("JS QR code failed, showing backup image");
-                    document.getElementById("backup_qrcode").style.display = "block";
-                }
-            }
+    <style>
+        #qrcode {
+            margin: 5%;
         }
+        #backup_qrcode {
+            display: none; /* This hides the backup QR code by default */
+        }
+    </style>
 
-    </script>
+<script>
+    async function handleVerifyTOTP(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = {
+            username: formData.get('username'),
+            code: formData.get('code')
+        };
+        const response = await fetch('/verify_totp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams(data)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            localStorage.setItem('token', result.access_token);
+            
+            window.location.href = '/staff';  // ✅ Redirect without token in URL
+            // Redirect to staff with the token in the URL
+            // window.location.href = `/staff?token=${encodeURIComponent(result.access_token)}`;
+        } else {
+            alert('TOTP verification failed');
+        }
+    }
+
+    window.onload = function () {
+        console.log("Window onload function triggered!");
+
+        const totpUri = localStorage.getItem('totp_uri');  // Get TOTP URI from localStorage
+        // const totpUri = new URLSearchParams(window.location.search).get('totp_uri');
+        console.log("The const totpUri = new URLSearchParams / var TOTP URI:", totpUri); // Debugging Step
+        
+        // if (totpUri) {
+        //     console.log("Debug Step - if (totpUri) TOTP URI:", totpUri); // Debugging Step
+        //     try {
+        //         const decodedUri = decodeURIComponent(totpUri);
+        //         console.log("Decoded URI:", decodedUri);
+        //         new QRCode(document.getElementById("qrcode"), decodedUri);
+        //         // new QRCode(document.getElementById("qrcode"), decodeURIComponent(totpUri));
+        //     } catch (e) {
+        //         console.error("JS QR Code generation failed, showing backup image.");
+        //         document.getElementById("backup_qrcode").style.display = "block";  // Show backup QR code if JS fails
+        //     }
+        // }
+
+        if (!totpUri) {
+        alert("Error: TOTP URI is missing. Please try logging in again.");
+        window.location.href = "/login";
+        return;
+    }
+
+    try {
+        // const decodedUri = decodeURIComponent(totpUri);
+        // console.log("Decoded URI for QR Code:", decodedUri);  // 🔍 Debugging step
+        // new QRCode(document.getElementById("qrcode"), decodedUri);
+        // const encodeURIComponent = encodeURIComponent(totpUri);
+        const encodedUri = encodeURIComponent(totpUri); // ✅ Encode for URL safety
+        console.log("Encoded URI for QR Code:", encodedUri);
+
+        // ✅ Fix QR Code API Request
+        document.getElementById("backup_qrcode").src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUri}`;
+
+        new QRCode(document.getElementById("qrcode"), totpUri);
+    } catch (e) {
+        console.error("QR code generation failed", e);
+        document.getElementById("backup_qrcode").style.display = "block";
+    }
+
+    };
+</script>
 </head>
 <body>
-    <h1>Verify TOTP</h1>
-    <div id="qrcode"></div>
-    <!-- <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ totp_uri|urlencode }}&size=200x200" alt="QR Code"> -->
-    <form onsubmit="handleVerifyTOTP(event)">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br>
-        <label for="code">TOTP Code:</label>
-        <input type="text" id="code" name="code" required><br>
-        <input type="submit" value="Verify">
-    </form>
-    <a href="/login">Back to Login</a>
+<h1>Verify TOTP</h1>
+<div id="qrcode"></div>
+<!-- <img id="backup_qrcode" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ totp_uri }}" alt="TOTP QR Code"> -->
+<img id="backup_qrcode" src="" alt="TOTP QR Code">
+<!-- <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ totp_uri|urlencode }}&size=200x200" alt="QR Code"> -->
+<form onsubmit="handleVerifyTOTP(event)">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required><br>
+    <label for="code">TOTP Code:</label>
+    <input type="text" id="code" name="code" required><br>
+    <input type="submit" value="Verify">
+</form>
+
+<a href="/login">Back to Login</a>
+<a href="/logout" onclick="localStorage.removeItem('token');">Logout</a><br>
+<a href="/">Back to Home</a><br>
+<a href="/add_food">Add Food Item</a><br>
+<a href="/add_book">Add Book Item</a><br>
 </body>
 </html>

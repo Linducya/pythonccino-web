@@ -1,19 +1,30 @@
-from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
+# main.py - Entry point for FastAPI application
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, Header, status
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordRequestForm
-from app.auth import authenticate_user, create_access_token, get_current_user, generate_totp_secret, verify_totp_code
-from app.utils_data import load_data, save_data
-from app.routes_food import router as food_router  # Import food_router
-from app.routes_book import router as book_router  # Import book_router
-from dotenv import load_dotenv
+from jose import jwt, JWTError
 import os
-import urllib.parse  # Import urllib.parse for URL encoding
+import logging
+from dotenv import load_dotenv
+from app.auth import authenticate_user, create_access_token, get_current_user, generate_totp_secret, verify_totp_code
+from app.db import init_db
+from app.utils_data import load_data, save_data
+from app.routes_food import router as food_router
+from app.routes_book import router as book_router
 
 # Load environment variables from .env file
 load_dotenv()
 
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your_secret_key")
+ALGORITHM = "HS256"
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize FastAPI app
 app = FastAPI()
 
 # Setup Jinja2 Templates
@@ -21,71 +32,146 @@ templates = Jinja2Templates(directory="templates")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# 🟢 Route: Login Page (Frontend)
 @app.get("/login", response_class=HTMLResponse)
 async def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
+# 🟢 Route: Verify TOTP Page (Frontend)
 @app.get("/verify_totp", response_class=HTMLResponse)
-async def verify_totp(request: Request, username: str, totp_uri: str):
-    return templates.TemplateResponse("verify_totp.html", {
-        "request": request,
-        "totp_uri": totp_uri,
-        "username": username
-    })
+async def verify_totp_page(request: Request, username: str):
+    return templates.TemplateResponse("verify_totp.html", {"request": request, "username": username})
+
+# # 🟢 Route: Authenticate & Generate Token
+# @app.post("/token")
+# async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+#     """Authenticate user, generate JWT access token, and return TOTP URI."""
+#     user = authenticate_user(form_data.username, form_data.password)
+#     if not user:
+#         raise HTTPException(status_code=400, detail="Invalid credentials")
+
+#     # Generate TOTP Secret
+#     totp_data = await generate_totp_secret(user["username"])
+#     totp_uri = totp_data.get("totp_uri")  # Extract TOTP URI
+
+#     if not totp_uri:
+#         raise HTTPException(status_code=500, detail="Error generating TOTP URI")
+
+#     access_token = create_access_token(data={"sub": user["username"]})
+
+#     return JSONResponse(
+#         content={
+#             "access_token": access_token,
+#             "message": "TOTP URI generated",
+#             "totp_uri": totp_uri
+#         },
+#         status_code=200
+#     )
 
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Authenticate user, generate JWT access token, and return TOTP URI."""
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    totp_uri = generate_totp_secret(user["username"])
-    # encoded_totp_uri = urllib.parse.quote(totp_uri)  # URL-encode the TOTP URI
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+
+    # Generate TOTP Secret
+    totp_data = await generate_totp_secret(user["username"])
+
+    if not totp_data or "totp_uri" not in totp_data:
+        raise HTTPException(status_code=500, detail="Error generating TOTP URI")  # Ensure it never returns undefined
+
+    totp_uri = totp_data["totp_uri"]  # Extract TOTP URI
+
     access_token = create_access_token(data={"sub": user["username"]})
 
     return JSONResponse(
         content={
             "access_token": access_token,
             "message": "TOTP URI generated",
-            "username": user["username"],
-            "totp_uri": totp_uri  # Pass the raw TOTP URI here (not encoded, frontend will encode it)
+            "totp_uri": totp_uri
         },
         status_code=200
     )
 
+# 🟢 Route: Verify TOTP Code & Generate Access Token
 @app.post("/verify_totp")
 async def verify_totp(username: str = Form(...), code: str = Form(...)):
+    """Verify user-provided TOTP code and return access token."""
     if verify_totp_code(username, code):
         access_token = create_access_token(data={"sub": username})
         return {"access_token": access_token, "token_type": "bearer"}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid TOTP code",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    
+    raise HTTPException(status_code=401, detail="Invalid TOTP code")
 
+# 🟢 Route: Home Page (Frontend)
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+# 🟢 Route: Load Home Page Data
 @app.get("/home", response_class=HTMLResponse)
 async def read_home(request: Request):
     try:
         food_menu, book_menu = load_data()
-        print(f"Food Menu: {food_menu}")
-        print(f"Book Menu: {book_menu}")
+        logger.info(f"Food Menu: {food_menu}")
+        logger.info(f"Book Menu: {book_menu}")
     except Exception as e:
-        print(f"Error loading data: {e}")
+        logger.error(f"Error loading data: {e}")
         food_menu, book_menu = [], []
+
     return templates.TemplateResponse("home.html", {"request": request, "food_menu": food_menu, "book_menu": book_menu})
 
-@app.get("/staff", response_class=HTMLResponse, dependencies=[Depends(get_current_user)])
-async def read_staff(request: Request, current_user: dict = Depends(get_current_user)):
-    return templates.TemplateResponse("staff.html", {"request": request, "username": current_user["username"]})
+# # 🟢 Route: Secure Staff Page (Returns JSON)
+# @app.get("/staff", response_class=JSONResponse)
+# async def read_staff(request: Request):
+#     """Validate JWT token and return username."""
+#     token = request.headers.get("Authorization")
 
+#     if not token or not token.startswith("Bearer "):
+#         raise HTTPException(status_code=401, detail="Missing or invalid token")
+
+#     token = token.split("Bearer ")[1]  # Extract token
+
+#     try:
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#         username: str = payload.get("sub")
+#         if not username:
+#             raise HTTPException(status_code=401, detail="Invalid token")
+#         return {"username": username}
+    
+#     except JWTError:
+#         raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+@app.get("/staff", response_class=JSONResponse)
+async def read_staff(request: Request):
+    """Validate JWT token and return username."""
+    token = request.headers.get("Authorization")
+
+    if not token or not token.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Hello - Missing or invalid token")
+
+    token = token.split("Bearer ")[1]  # Extract actual token
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return {"username": username}
+    
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+
+# 🟢 Route: Logout (Redirects to Login)
+@app.get("/logout", response_class=RedirectResponse)
+async def logout():
+    """Clears token and redirects to login page."""
+    response = RedirectResponse(url="/login")
+    response.delete_cookie("token")  # Clears token if using cookies
+    return response
+
+# Include additional routers
 app.include_router(food_router)
 app.include_router(book_router)
