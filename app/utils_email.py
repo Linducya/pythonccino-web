@@ -4,9 +4,12 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 def send_email_confirmation(name, email, order_details, order_type="food"):
-    sender_email = os.getenv("EMAIL_ADDRESS")
-    sender_password = os.getenv("EMAIL_PASSWORD")
+    sender_email = os.getenv("SMTP_EMAIL")
+    sender_password = os.getenv("SMTP_PASSWORD")
     receiver_email = email
+
+    if not sender_email or not sender_password:
+        raise ValueError("SENDER_EMAIL or SENDER_PASSWORD environment variables are not set.")
 
     # Extract the order number from the first item in order_details
     order_number = order_details[0].get("order_number", "N/A")
@@ -48,6 +51,13 @@ def send_email_confirmation(name, email, order_details, order_type="food"):
     message.attach(part2)
 
     # Send the email
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, receiver_email, message.as_string())
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"SMTP Authentication Error: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during SMTP login: {e}")
+        raise
