@@ -35,7 +35,8 @@
         if (response.ok) {
             const result = await response.json();
             localStorage.setItem('token', result.access_token);
-            
+            console.log("Token stored in localStorage:", result.access_token);
+
             window.location.href = '/staff';  // ✅ Redirect without token in URL
             // Redirect to staff with the token in the URL
             // window.location.href = `/staff?token=${encodeURIComponent(result.access_token)}`;
@@ -88,6 +89,26 @@
     }
 
     };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+        console.log("Username extracted from query parameter:", username);
+        if (!username) {
+            alert("Error: Username is missing. Please try logging in again.");
+            window.location.href = "/login";
+        }
+        const usernameInput = document.createElement('input');
+        usernameInput.type = 'hidden';
+        usernameInput.name = 'username';
+        usernameInput.value = username;
+        const form = document.querySelector('form');
+        if (form) {
+            form.appendChild(usernameInput);
+        } else {
+            console.error("Form element not found in the DOM.");
+        }
+    });
 </script>
 </head>
 <body>
@@ -97,8 +118,6 @@
 <img id="backup_qrcode" src="" alt="TOTP QR Code">
 <!-- <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ totp_uri|urlencode }}&size=200x200" alt="QR Code"> -->
 <form onsubmit="handleVerifyTOTP(event)">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required><br>
     <label for="code">TOTP Code:</label>
     <input type="text" id="code" name="code" required><br>
     <input type="submit" value="Verify">

@@ -16,25 +16,29 @@
     <a href="/logout" onclick="localStorage.removeItem('token');">Logout</a>
 
     <script>
+        console.log("staff.html script execution started.");
         document.addEventListener("DOMContentLoaded", function () {
-        const token = localStorage.getItem('token');  // ✅ Always use localStorage
-
+        const token = localStorage.getItem('token');
+        console.log("Token retrieved from localStorage:", token);
         if (!token) {
             alert("No token found. Redirecting to login.");
             window.location.href = '/login';
             return;
         }
 
+        console.log("Token before fetch:", token);
+        console.log("Authorization header before fetch:", `Bearer ${token}`);
+
         fetch('/staff', {
             method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}` }  // ✅ Send token in headers
+            headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(response => {
             if (response.ok) return response.json();
             throw new Error('Unauthorized');
         })
         .then(data => {
-            document.getElementById("username").innerText = data.username;  // ✅ Insert username dynamically
+            document.getElementById("username").innerText = data.username;
         })
         .catch(error => {
             console.error(error);
@@ -43,35 +47,6 @@
             window.location.href = '/login';
         });
     });
-    //   headers: { 'Authorization': `Bearer ${token}` }  // ✅ Send token in headers
-  
-    //     document.addEventListener("DOMContentLoaded", function () {
-    //         const token = localStorage.getItem('token');  // ✅ Always use localStorage
-
-    //         if (!token) {
-    //             alert("No token found. Redirecting to login.");
-    //             window.location.href = '/login';
-    //             return;
-    //         }
-
-    //         fetch('/staff', {
-    //             method: 'GET',
-    //             headers: { 'Authorization': `Bearer ${token}` }
-    //         })
-    //         .then(response => {
-    //             if (response.ok) return response.json();
-    //             throw new Error('Unauthorized');
-    //         })
-    //         .then(data => {
-    //             document.getElementById("username").innerText = data.username;  // ✅ Insert username dynamically
-    //         })
-    //         .catch(error => {
-    //             console.error(error);
-    //             alert("Session expired. Please log in again.");
-    //             localStorage.removeItem('token');
-    //             window.location.href = '/login';
-    //         });
-    //     });
     </script>
 </body>
 </html>

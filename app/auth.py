@@ -80,9 +80,14 @@ async def generate_totp_secret(username: str):
 
 async def verify_totp_code(username: str, code: str) -> bool:
     """Verify the provided TOTP code against the stored secret."""
+    logger.info("verify_totp_code function has been called.")
     secret = await get_totp_secret(username)
     if not secret:
         raise HTTPException(status_code=400, detail="TOTP secret not found for this user")
+    
+    logger.info(f"Verifying TOTP code for username: {username}")
+    logger.info(f"Stored secret: {secret}")
+    logger.info(f"Provided code: {code}")
     
     totp = pyotp.TOTP(secret)
     return totp.verify(code, valid_window=1)  # Allow slight clock drift

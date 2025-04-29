@@ -20,7 +20,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your_secret_key")
 ALGORITHM = "HS256"
 
-# Configure logging
+# Ensure logging level is set to INFO
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 @app.post("/verify_totp")
 async def verify_totp(username: str = Form(...), code: str = Form(...)):
     """Verify user-provided TOTP code and return access token."""
-    if verify_totp_code(username, code):
+    logger.info(f"/verify_totp route called with username: {username} and code: {code}")
+
+    if await verify_totp_code(username, code):
         access_token = create_access_token(data={"sub": username})
         return {"access_token": access_token, "token_type": "bearer"}
     
@@ -148,8 +150,13 @@ async def read_staff(request: Request):
     """Validate JWT token and return username."""
     token = request.headers.get("Authorization")
 
-    if not token or not token.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Hello - Missing or invalid token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Authorization header is missing. Please include a valid token.")
+
+    if not token.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization header format is invalid. Expected 'Bearer <token>'.")
+
+    logger.info(f"Authorization header received: {token}")
 
     token = token.split("Bearer ")[1]  # Extract actual token
 
@@ -157,12 +164,10 @@ async def read_staff(request: Request):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if not username:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=401, detail="Token payload missing 'sub' field.")
         return {"username": username}
-    
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
+    except JWTError as e:
+        raise HTTPException(status_code=401, detail=f"Token validation error: {str(e)}")
 
 # 🟢 Route: Logout (Redirects to Login)
 @app.get("/logout", response_class=RedirectResponse)
