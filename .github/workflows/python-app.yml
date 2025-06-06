@@ -2,9 +2,9 @@ name: Python application
 
 on:
   push:
-    branches: [ main ]
+    branches: [ gcp-configuration  ]
   pull_request:
-    branches: [ main ]
+    branches: [ gcp-configuration  ]
 
 jobs:
   build:
