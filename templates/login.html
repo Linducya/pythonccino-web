@@ -27,13 +27,6 @@
             
             if (response.ok) {
                 const result = await response.json();
-                console.log("TOTP URI:", result.qr_code_uri);
-                console.log("TOTP URI:", result.totp_uri);  // Debug Step
-                // localStorage.setItem('token', result.access_token);  // Store token in local storage
-                // window.location.href = '/verify_totp?username=' + encodeURIComponent(data.username) + '&qr_code_uri=' + encodeURIComponent(result.qr_code_uri);
-                // window.location.href = '/verify_totp?username=' + encodeURIComponent(data.username) + '&totp_uri=' + encodeURIComponent(result.qr_code_uri);
-                // // window.location.href = '/verify_totp?username=' + encodeURIComponent(data.username);
-                // // window.location.href = '/verify_totp?username=' + encodeURIComponent(data.username) + '&totp_uri=' + encodeURIComponent(result.totp_uri);
                 if (!result.totp_uri) {
                     alert("Error: TOTP URI is undefined! Error: TOTP URI is missing!");
                     return;

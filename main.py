@@ -42,32 +42,6 @@ async def login_form(request: Request):
 async def verify_totp_page(request: Request, username: str):
     return templates.TemplateResponse("verify_totp.html", {"request": request, "username": username})
 
-# # 🟢 Route: Authenticate & Generate Token
-# @app.post("/token")
-# async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-#     """Authenticate user, generate JWT access token, and return TOTP URI."""
-#     user = authenticate_user(form_data.username, form_data.password)
-#     if not user:
-#         raise HTTPException(status_code=400, detail="Invalid credentials")
-
-#     # Generate TOTP Secret
-#     totp_data = await generate_totp_secret(user["username"])
-#     totp_uri = totp_data.get("totp_uri")  # Extract TOTP URI
-
-#     if not totp_uri:
-#         raise HTTPException(status_code=500, detail="Error generating TOTP URI")
-
-#     access_token = create_access_token(data={"sub": user["username"]})
-
-#     return JSONResponse(
-#         content={
-#             "access_token": access_token,
-#             "message": "TOTP URI generated",
-#             "totp_uri": totp_uri
-#         },
-#         status_code=200
-#     )
-
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """Authenticate user, generate JWT access token, and return TOTP URI."""
@@ -116,34 +90,9 @@ async def read_root(request: Request):
 async def read_home(request: Request):
     try:
         food_menu, book_menu = load_data()
-        logger.info(f"Food Menu: {food_menu}")
-        logger.info(f"Book Menu: {book_menu}")
-    except Exception as e:
-        logger.error(f"Error loading data: {e}")
+    except Exception:
         food_menu, book_menu = [], []
-
     return templates.TemplateResponse("home.html", {"request": request, "food_menu": food_menu, "book_menu": book_menu})
-
-# # 🟢 Route: Secure Staff Page (Returns JSON)
-# @app.get("/staff", response_class=JSONResponse)
-# async def read_staff(request: Request):
-#     """Validate JWT token and return username."""
-#     token = request.headers.get("Authorization")
-
-#     if not token or not token.startswith("Bearer "):
-#         raise HTTPException(status_code=401, detail="Missing or invalid token")
-
-#     token = token.split("Bearer ")[1]  # Extract token
-
-#     try:
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         username: str = payload.get("sub")
-#         if not username:
-#             raise HTTPException(status_code=401, detail="Invalid token")
-#         return {"username": username}
-    
-#     except JWTError:
-#         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 @app.get("/staff", response_class=JSONResponse)
 async def read_staff(request: Request):

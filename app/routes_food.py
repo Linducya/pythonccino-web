@@ -4,14 +4,17 @@ from fastapi.templating import Jinja2Templates
 from app.utils_data import load_data, save_data
 from app.utils_email import send_email_confirmation
 from app.auth import get_current_user
-import json
 import os
 import uuid
+import json
 
 router = APIRouter()
 
 # Define the templates object
-templates = Jinja2Templates(directory="templates")
+TEMPLATES_DIR = os.environ.get("TEMPLATES_DIR", "templates")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+ORDERS_FILE_PATH = os.environ.get("ORDERS_FOOD_FILE", "data/orders_food.json")
 
 @router.get("/add_food", response_class=HTMLResponse, dependencies=[Depends(get_current_user)])
 async def get_add_food(request: Request):
@@ -50,42 +53,28 @@ async def post_order_food(request: Request, name: str = Form(...), email: str = 
             "quantity": qty,
             "price": price
         })
-    print(f"Order received: {order_details}")
-
     # Read existing orders
-    orders_file_path = "data/orders_food.json"
     try:
-        if os.path.exists(orders_file_path):
-            with open(orders_file_path, "r") as f:
+        if os.path.exists(ORDERS_FILE_PATH):
+            with open(ORDERS_FILE_PATH, "r") as f:
                 orders = json.load(f)
         else:
             orders = []
-    except json.JSONDecodeError as e:
-        print(f"Error reading JSON file: {e}")
+    except json.JSONDecodeError:
         orders = []
-
-    # Find the customer in the existing orders
     customer_order = next((order for order in orders if order["name"] == name), None)
     if customer_order:
-        # Ensure the 'orders' key exists
         if "orders" not in customer_order:
             customer_order["orders"] = []
-        # Append the new orders to the existing customer's orders
         customer_order["orders"].extend(order_details)
     else:
-        # Create a new customer order
         new_customer_order = {
             "name": name,
             "orders": order_details
         }
         orders.append(new_customer_order)
-
-    # Write updated orders back to the file
-    with open(orders_file_path, "w") as f:
+    with open(ORDERS_FILE_PATH, "w") as f:
         json.dump(orders, f, indent=4)
-
-    # Send email confirmation if requested
     if email_confirmation and email:
         send_email_confirmation(name, email, order_details)
-
     return templates.TemplateResponse("order_confirmation.html", {"request": request, "order_details": order_details, "order_type": "food", "total_amount": total_amount})

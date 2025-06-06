@@ -16,18 +16,13 @@
     <a href="/logout" onclick="localStorage.removeItem('token');">Logout</a>
 
     <script>
-        console.log("staff.html script execution started.");
         document.addEventListener("DOMContentLoaded", function () {
         const token = localStorage.getItem('token');
-        console.log("Token retrieved from localStorage:", token);
         if (!token) {
             alert("No token found. Redirecting to login.");
             window.location.href = '/login';
             return;
         }
-
-        console.log("Token before fetch:", token);
-        console.log("Authorization header before fetch:", `Bearer ${token}`);
 
         fetch('/staff', {
             method: 'GET',

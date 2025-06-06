@@ -1,21 +1,24 @@
 import aiosqlite
 import logging
+import os
+from dotenv import load_dotenv
 
-# Create a logger
 logger = logging.getLogger(__name__)
 
-DB_PATH = "totp_secrets.db"
+load_dotenv()
+DB_PATH = os.getenv("DB_PATH")
+if not DB_PATH:
+    raise ValueError("DB_PATH is missing from environment variables")
 
 async def init_db():
     try:
-      async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute(
-            "CREATE TABLE IF NOT EXISTS totp_secrets (username TEXT PRIMARY KEY, secret TEXT NOT NULL)"
+        async with aiosqlite.connect(DB_PATH) as db:
+            await db.execute(
+                "CREATE TABLE IF NOT EXISTS totp_secrets (username TEXT PRIMARY KEY, secret TEXT NOT NULL)"
             )
-        await db.commit()
-        print("✅ Database initialized successfully")
+            await db.commit()
     except Exception as e:
-        print(f"❌ Error initializing database: {e}")
+        logger.error(f"Error initializing database: {e}")
 
 async def store_totp_secret(username: str, secret: str):
     async with aiosqlite.connect(DB_PATH) as db:
@@ -26,9 +29,4 @@ async def get_totp_secret(username: str):
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute("SELECT secret FROM totp_secrets WHERE username=?", (username,))
         row = await cursor.fetchone()
-        logger.info(f"Retrieving TOTP secret for username: {username}")
-        if not row:
-            logger.warning(f"No TOTP secret found for username: {username}")
-        else:
-            logger.info(f"Retrieved TOTP secret for username: {username}: {row[0]}")
         return row[0] if row else None

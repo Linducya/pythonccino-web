@@ -63,5 +63,10 @@
         "name": "Fruit",
         "description": "Strawberries",
         "price": 1.99
+    },
+    {
+        "name": "cake",
+        "description": "carrot",
+        "price": 0.99
     }
 ]

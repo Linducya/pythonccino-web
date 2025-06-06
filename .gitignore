@@ -6,10 +6,12 @@ __pycache__/
 staff.bak
 
 # Database files
-totp_secrets.db
+*.db
+*.sqlite3
 
 # Environment variables
 .env
+*.env.*
 
 # Static files (optional, if generated dynamically)
 static/images/favicon.ico
@@ -26,7 +28,29 @@ static/images/favicon.ico
 *.swp
 *.swo
 *.orig
+*.cache
 
 # Data files
 data/
 *.json
+*.pkl
+
+# Ignore Gmail OAuth credentials and tokens
+client_secret_*.json
+token.json
+
+# SSL keys/certs
+*.pem
+*.key
+*.crt
+
+# Test coverage
+.coverage
+
+# VS Code settings
+.vscode/
+
+# Python packaging
+*.egg-info/
+dist/
+build/

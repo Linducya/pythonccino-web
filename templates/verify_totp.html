@@ -46,24 +46,8 @@
     }
 
     window.onload = function () {
-        console.log("Window onload function triggered!");
 
         const totpUri = localStorage.getItem('totp_uri');  // Get TOTP URI from localStorage
-        // const totpUri = new URLSearchParams(window.location.search).get('totp_uri');
-        console.log("The const totpUri = new URLSearchParams / var TOTP URI:", totpUri); // Debugging Step
-        
-        // if (totpUri) {
-        //     console.log("Debug Step - if (totpUri) TOTP URI:", totpUri); // Debugging Step
-        //     try {
-        //         const decodedUri = decodeURIComponent(totpUri);
-        //         console.log("Decoded URI:", decodedUri);
-        //         new QRCode(document.getElementById("qrcode"), decodedUri);
-        //         // new QRCode(document.getElementById("qrcode"), decodeURIComponent(totpUri));
-        //     } catch (e) {
-        //         console.error("JS QR Code generation failed, showing backup image.");
-        //         document.getElementById("backup_qrcode").style.display = "block";  // Show backup QR code if JS fails
-        //     }
-        // }
 
         if (!totpUri) {
         alert("Error: TOTP URI is missing. Please try logging in again.");
@@ -72,12 +56,7 @@
     }
 
     try {
-        // const decodedUri = decodeURIComponent(totpUri);
-        // console.log("Decoded URI for QR Code:", decodedUri);  // 🔍 Debugging step
-        // new QRCode(document.getElementById("qrcode"), decodedUri);
-        // const encodeURIComponent = encodeURIComponent(totpUri);
         const encodedUri = encodeURIComponent(totpUri); // ✅ Encode for URL safety
-        console.log("Encoded URI for QR Code:", encodedUri);
 
         // ✅ Fix QR Code API Request
         document.getElementById("backup_qrcode").src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUri}`;
@@ -93,7 +72,6 @@
     document.addEventListener("DOMContentLoaded", function () {
         const urlParams = new URLSearchParams(window.location.search);
         const username = urlParams.get('username');
-        console.log("Username extracted from query parameter:", username);
         if (!username) {
             alert("Error: Username is missing. Please try logging in again.");
             window.location.href = "/login";
