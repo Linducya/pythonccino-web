@@ -1,6 +1,6 @@
 """
 utils_data.py
-Helper functions for reading and writing food and book menu data to JSON files.
+Helper functions for reading & writing food & book menu data to JSON files.
 """
 
 import json
@@ -8,8 +8,13 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
-food_menu_path = os.environ.get('FOOD_MENU_PATH', os.path.join(DATA_DIR, 'food_menu.json'))
-book_menu_path = os.environ.get('BOOK_MENU_PATH', os.path.join(DATA_DIR, 'book_menu.json'))
+food_menu_path = os.environ.get(
+    'FOOD_MENU_PATH', os.path.join(DATA_DIR, 'food_menu.json')
+)
+book_menu_path = os.environ.get(
+    'BOOK_MENU_PATH', os.path.join(DATA_DIR, 'book_menu.json')
+)
+
 
 def load_data():
     try:
@@ -21,6 +26,7 @@ def load_data():
         food_menu = []
         book_menu = []
     return food_menu, book_menu
+
 
 def save_data(food_menu, book_menu):
     try:

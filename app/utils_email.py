@@ -5,18 +5,29 @@ from email.mime.text import MIMEText
 import base64
 import os
 from email.mime.multipart import MIMEMultipart
+import logging
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
 CLIENT_SECRET_FILE = os.environ.get('GOOGLE_CLIENT_SECRET_FILE')
 if not CLIENT_SECRET_FILE:
-    raise RuntimeError("GOOGLE_CLIENT_SECRET_FILE environment variable must be set and point to your client_secret_*.json file.")
+    raise RuntimeError(
+        "GOOGLE_CLIENT_SECRET_FILE environment variable must be set and "
+        "point to your client_secret_*.json file."
+    )
 TOKEN_FILE = os.environ.get('GOOGLE_TOKEN_FILE')
 if not TOKEN_FILE:
-    raise RuntimeError("GOOGLE_TOKEN_FILE environment variable must be set and point to your token.json file.")
+    raise RuntimeError(
+        "GOOGLE_TOKEN_FILE environment variable must be set and point to your token.json file."
+    )
 SMTP_EMAIL = os.environ.get('SMTP_EMAIL')
 if not SMTP_EMAIL:
-    raise RuntimeError("SMTP_EMAIL environment variable must be set.")
+    raise RuntimeError(
+        "SMTP_EMAIL environment variable must be set."
+    )
+
+logger = logging.getLogger(__name__)
+
 
 def get_gmail_service():
     creds = None
@@ -29,6 +40,7 @@ def get_gmail_service():
             token.write(creds.to_json())
     return build('gmail', 'v1', credentials=creds)
 
+
 def send_email(to, subject, body):
     service = get_gmail_service()
     message = MIMEText(body)
@@ -38,10 +50,10 @@ def send_email(to, subject, body):
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
     service.users().messages().send(userId='me', body={'raw': raw}).execute()
 
+
 def send_email_confirmation(name, email, order_details, order_type="food"):
     sender_email = SMTP_EMAIL
     receiver_email = email
-
 
     # Extract the order number from the first item in order_details
     order_number = order_details[0].get("order_number", "N/A")
@@ -52,27 +64,42 @@ def send_email_confirmation(name, email, order_details, order_type="food"):
     message["From"] = sender_email
     message["To"] = receiver_email
 
-    text = f"Dear {name},\n\nThank you for your order!\n\nOrder Number: {order_number}\n\nOrder Details:\n"
-    html = f"""\
-    <html><body><p>Dear {name},<br><br>
-           Thank you for your order!<br><br>
-           <b>Order Number:</b> {order_number}<br><br>
-           <b>Order Details:</b><br>
-    """
+    text = (
+        f"Dear {name},\n\nThank you for your order!\n\nOrder Number: {order_number}\n\n"
+        f"Order Details:\n"
+    )
+    html = (
+        f"<html><body><p>Dear {name},<br><br>"
+        f"Thank you for your order!<br><br>"
+        f"<b>Order Number:</b> {order_number}<br><br>"
+        f"<b>Order Details:</b><br>"
+    )
     total_amount = 0
     for item in order_details:
         if order_type == "food":
             price = item.get("price", 0)
             total_amount += price * item['quantity']
             text += f"{item['quantity']} x {item['food_item']} - {item['description']} - £{price}\n"
-            html += f"{item['quantity']} x {item['food_item']}<br>Description: {item['description']}<br>Price: £{price}<br><br>"
+            html += (
+                f"{item['quantity']} x {item['food_item']}<br>Description: "
+                f"{item['description']}<br>Price: £{price}<br><br>"
+            )
         elif order_type == "book":
             price = item.get("price", 0)
             total_amount += price * item['quantity']
             text += f"{item['quantity']} x {item['book_title']} - £{price}\n"
-            html += f"{item['quantity']} x {item['book_title']}<br>Price: £{price}<br><br>"
-    text += f"\nTotal Amount: £{total_amount}\n\nBest regards,\nThe Pythonccino Food & Book Cafe"
-    html += f"<br>Total Amount: £{total_amount}<br><br>Best regards,<br>The Pythonccino Food & Book Cafe</p></body></html>"
+            html += (
+                f"{item['quantity']} x {item['book_title']}<br>"
+                f"Price: £{price}<br><br>"
+            )
+    text += (
+        f"\nTotal Amount: £{total_amount}\n\nBest regards,\n"
+        f"The Pythonccino Food & Book Cafe"
+    )
+    html += (
+        f"<br>Total Amount: £{total_amount}<br><br>Best regards,<br>"
+        f"The Pythonccino Food & Book Cafe</p></body></html>"
+    )
 
     part1 = MIMEText(text, "plain")
     part2 = MIMEText(html, "html")
@@ -90,3 +117,27 @@ def send_email_confirmation(name, email, order_details, order_type="food"):
         return sent_message
     except Exception:
         return None
+
+
+def send_order_notification(order):
+    to_email = os.environ.get('NOTIFICATION_EMAIL')
+    if not to_email:
+        raise RuntimeError("NOTIFICATION_EMAIL environment variable must be set.")
+
+    subject = f"New order received: {order['order_number']}"
+    body = (
+        f"New order received!\n\nName: {order['name']}\nItems: {order['items']}\n"
+        f"Total: £{order['total']}\nOrder type: {order['type']}\n"
+        f"Time: {order['time']}\n"
+    )
+
+    # Send email using Gmail API
+    try:
+        send_email(to_email, subject, body)
+        logger.info(
+            f"Order notification email sent to staff for order: {order}"
+        )
+    except Exception as e:
+        logger.error(
+            f"Failed to send order notification email to staff: {e}"
+        )

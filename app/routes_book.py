@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Request, Form
+from fastapi import (
+    APIRouter, Depends, Request, Form
+)
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.utils_data import load_data, save_data
@@ -6,7 +8,7 @@ from app.utils_email import send_email_confirmation
 from app.auth import get_current_user
 import os
 import uuid
-import jsongit 
+import json
 
 router = APIRouter()
 
@@ -16,9 +18,11 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 ORDERS_FILE_PATH = os.environ.get("ORDERS_BOOK_FILE", "data/orders_book.json")
 
+
 @router.get("/add_book", response_class=HTMLResponse, dependencies=[Depends(get_current_user)])
 async def get_add_book(request: Request):
     return templates.TemplateResponse("add_book.html", {"request": request})
+
 
 @router.post("/add_book", response_class=HTMLResponse, dependencies=[Depends(get_current_user)])
 async def post_add_book(request: Request, title: str = Form(...), year_published: str = Form(...), price: float = Form(...)):
@@ -28,10 +32,12 @@ async def post_add_book(request: Request, title: str = Form(...), year_published
     save_data(food_menu, book_menu)
     return templates.TemplateResponse("home.html", {"request": request, "food_menu": food_menu, "book_menu": book_menu})
 
+
 @router.get("/order_book", response_class=HTMLResponse)
 async def get_order_book(request: Request):
     food_menu, book_menu = load_data()
-    return templates.TemplateResponse("order_book.html", {"request": request, "book_menu": book_menu})  
+    return templates.TemplateResponse("order_book.html", {"request": request, "book_menu": book_menu})
+
 
 @router.post("/order_book", response_class=HTMLResponse)
 async def post_order_book(request: Request, name: str = Form(...), email: str = Form(None), email_confirmation: bool = Form(False), book_title: list = Form(...), quantity: list = Form(...)):

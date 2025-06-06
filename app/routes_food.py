@@ -1,4 +1,9 @@
-from fastapi import APIRouter, Depends, Request, Form
+from fastapi import (
+    APIRouter,
+    Depends,
+    Request,
+    Form
+)
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.utils_data import load_data, save_data
@@ -16,9 +21,11 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 ORDERS_FILE_PATH = os.environ.get("ORDERS_FOOD_FILE", "data/orders_food.json")
 
+
 @router.get("/add_food", response_class=HTMLResponse, dependencies=[Depends(get_current_user)])
 async def get_add_food(request: Request):
     return templates.TemplateResponse("add_food.html", {"request": request})
+
 
 @router.post("/add_food", response_class=HTMLResponse, dependencies=[Depends(get_current_user)])
 async def post_add_food(request: Request, name: str = Form(...), description: str = Form(...), price: float = Form(...)):
@@ -28,10 +35,12 @@ async def post_add_food(request: Request, name: str = Form(...), description: st
     save_data(food_menu, book_menu)
     return templates.TemplateResponse("home.html", {"request": request, "food_menu": food_menu, "book_menu": book_menu})
 
+
 @router.get("/order_food", response_class=HTMLResponse)
 async def get_order_food(request: Request):
     food_menu, book_menu = load_data()
     return templates.TemplateResponse("order_food.html", {"request": request, "food_menu": food_menu})
+
 
 @router.post("/order_food", response_class=HTMLResponse)
 async def post_order_food(request: Request, name: str = Form(...), email: str = Form(None), email_confirmation: bool = Form(False), food_item: list = Form(...), quantity: list = Form(...)):

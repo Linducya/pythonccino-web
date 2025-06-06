@@ -1,5 +1,8 @@
 import asyncio
-from app.db import init_db, store_totp_secret, get_totp_secret
+from app.db import (
+    init_db, store_totp_secret, get_totp_secret
+)
+
 
 async def test_totp_secret():
     await init_db()  # Ensure the database is initialized
