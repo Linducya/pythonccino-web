@@ -18,7 +18,7 @@ if not CLIENT_SECRET_FILE:
 TOKEN_FILE = os.environ.get('GOOGLE_TOKEN_FILE')
 if not TOKEN_FILE:
     raise RuntimeError(
-        "GOOGLE_TOKEN_FILE environment variable must be set and point to your token.json file."
+        "GOOGLE_TOKEN_FILE env variable must be set & point to your token.json file."
     )
 SMTP_EMAIL = os.environ.get('SMTP_EMAIL')
 if not SMTP_EMAIL:
@@ -79,7 +79,10 @@ def send_email_confirmation(name, email, order_details, order_type="food"):
         if order_type == "food":
             price = item.get("price", 0)
             total_amount += price * item['quantity']
-            text += f"{item['quantity']} x {item['food_item']} - {item['description']} - £{price}\n"
+            text += (
+                f"{item['quantity']} x {item['food_item']} - "
+                f"{item['description']} - £{price}\n"
+            )
             html += (
                 f"{item['quantity']} x {item['food_item']}<br>Description: "
                 f"{item['description']}<br>Price: £{price}<br><br>"
@@ -113,9 +116,21 @@ def send_email_confirmation(name, email, order_details, order_type="food"):
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
         body = {'raw': raw_message}
         user_id = 'me'
-        sent_message = service.users().messages().send(userId=user_id, body=body).execute()
+        sent_message = (
+            service.users()
+            .messages()
+            .send(userId=user_id, body=body)
+            .execute()
+        )
+        logger.info(
+            f"Order confirmation email sent to {email} for order: {order_number}"
+        )
         return sent_message
-    except Exception:
+    except Exception as e:
+        logger.error(
+            f"Failed to send confirmation to {email} for order: {order_number}: {e}",
+            exc_info=True
+        )
         return None
 
 

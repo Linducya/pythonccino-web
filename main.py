@@ -48,7 +48,9 @@ async def login_form(request: Request):
 # 🟢 Route: Verify TOTP Page (Frontend)
 @app.get("/verify_totp", response_class=HTMLResponse)
 async def verify_totp_page(request: Request, username: str):
-    return templates.TemplateResponse("verify_totp.html", {"request": request, "username": username})
+    return templates.TemplateResponse(
+        "verify_totp.html", {"request": request, "username": username}
+    )
 
 
 @app.post("/token")
