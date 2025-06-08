@@ -20,6 +20,17 @@ from app.utils_data import load_data
 from app.routes_food import router as food_router
 from app.routes_book import router as book_router
 
+# Reconstruct Google OAuth credential files from environment variables (for Azure)
+client_secret_json = os.getenv("GOOGLE_CLIENT_SECRET_JSON")
+if client_secret_json:
+    with open("client_secret.json", "w") as f:
+        f.write(client_secret_json)
+
+token_json = os.getenv("GOOGLE_TOKEN_JSON")
+if token_json:
+    with open("token.json", "w") as f:
+        f.write(token_json)
+
 # Load environment variables from .env file
 load_dotenv()
 
