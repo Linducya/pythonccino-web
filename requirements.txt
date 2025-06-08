@@ -3,6 +3,7 @@ anyio==4.8.0
 blinker==1.9.0
 exceptiongroup==1.2.2
 fastapi==0.115.9
+gunicorn==21.2.0
 h11==0.14.0
 idna==3.10
 importlib_metadata==8.6.1
