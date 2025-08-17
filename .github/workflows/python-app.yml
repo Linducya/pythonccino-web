@@ -70,6 +70,6 @@ jobs:
       run: |
         az storage blob upload-batch -d '$web' -s .
           --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
-          --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
-          --source static \
-          --destination '$web'
+          --account-key ${{ secrets.AZURE_STORAGE_KEY }}
+          # --source static \
+          # --destination '$web'
