@@ -64,7 +64,7 @@ jobs:
 
     - name: Install Azure CLI
       run: |
-        curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
     - name: Upload static files to Azure Blob Storage
       run: |
