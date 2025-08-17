@@ -66,9 +66,9 @@ jobs:
       run: |
         curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-    - name: Upload static files to Azure Blob Storage
+    - name: Upload FastAPI app files and static files to Azure Blob Storage
       run: |
-        az storage blob upload-batch \
+        az storage blob upload-batch -d '$web' -s .
           --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
           --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
           --source static \
